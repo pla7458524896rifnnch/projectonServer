@@ -6,6 +6,8 @@ import VoiceMessage from "./MessageComponent/VoiceMessage";
 import SocketManager from "../../api/socket";
 import { useDateToTime } from "../../Hooks/DateToDate";
 import ScrollableFeed from 'react-scrollable-feed'
+import { fetchWhoAmI } from "../../api/api";
+// import { sendPushNotification } from "../../api/sendNotificationUser";
 const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
   if (!isOpen) return null;
   const [newMessage, setNewMessage] = useState("");
@@ -19,6 +21,7 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
   const [isMicPressed, setIsMicPressed] = useState(false);
   const socketRef = useRef(null);
   let recordingTimer;
+  const [me,setMe]=useState({})
   const toggleDrawer = () => setIsOpenMoney(!isOpenMoney);
   useEffect(() => {
     if (isOpen) {
@@ -35,6 +38,11 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
         console.error("WebSocket error:", error);
       };
       ///
+      const fetchMe=async()=>{
+        const res=await fetchWhoAmI()
+        setMe(res)
+      }
+      fetchMe()
       return () => {
         socketRef.current.disconnect();
         socketRef.current = null; // پاکسازی
@@ -49,6 +57,7 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
           type: "msg"
       }
       socketRef.current.sendMessage(newmsg);
+      // sendPushNotification(me.data.fullName,content)
       setNewMessage("");
     }
   };

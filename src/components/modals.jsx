@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DeleteIcon,
    EmailIcon,
    ExpertIcon,
@@ -8,6 +8,9 @@ import { DeleteIcon,
    PasswordIcon,
    ProfileIcon,
    UserNameIcon } from "./icons";
+import { fetchWhoAmI } from "../api/api";
+import { toast, ToastContainer } from "react-toastify";
+import { NotifAddAdmin, NotifAddUser, NotifDirectAdmin, NotifUpdateAdmin, NotifUpdateUser } from "./notify";
 
 // eslint-disable-next-line react/prop-types
 const ConfirmationModalDeleteAdmin = ({ isOpen, onClose, onConfirm }) => {
@@ -46,6 +49,7 @@ const ConfirmationModalDeleteAdmin = ({ isOpen, onClose, onConfirm }) => {
           </button>
         </div>
       </div>
+      
     </div>
   );
 };
@@ -253,11 +257,11 @@ const AddManagerModal = ({ isOpen, onClose, onAddAdmin,confirm }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     password: "",
-    mobile: "",
+    mobile:"",
     email: "",
     specialties:2
   });
-  const [file, setFile] = useState(null);
+  const [File, setFile] = useState(null);
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -272,12 +276,13 @@ const AddManagerModal = ({ isOpen, onClose, onAddAdmin,confirm }) => {
     for (const key in formData) {
       data.append(key, formData[key]);
     }
-    if (file) {
-      data.append("file", file);
+    if (File) {
+      data.append("profile_img", File);
     }
-    const {fullName,password,mobile,email,specialties}=formData
-   await onAddAdmin(formData)    
+    // const {fullName,password,mobile,email,specialties}=formData
+   await onAddAdmin(data)    
       onClose();
+      toast(<NotifAddAdmin/>)
       confirm()
   };
   return (
@@ -395,7 +400,7 @@ const AddManagerModal = ({ isOpen, onClose, onAddAdmin,confirm }) => {
     </div>
     </div>
     <div className="relative w-full text-[#024227]  my-3 mx-2">
-      {file&&'فایل آپلود شد'}
+      {File&&'تصویر پروفایل آپلود شد'}
     </div>
   </div>
 
@@ -411,6 +416,7 @@ const AddManagerModal = ({ isOpen, onClose, onAddAdmin,confirm }) => {
     ثبت
   </button>
       </div>
+
     </div>
   );
 };
@@ -439,9 +445,11 @@ const AddUserModal = ({ isOpen, onClose, onAddUser,confirm }) => {
       data.append(key, formData[key]);
     }
     if (file) {
-      data.append("file", file);
+      data.append("profile_img", file);
     }
-      onAddUser({...formData,username:formData.email}); // Pass form data to the parent 
+      onAddUser(data); // Pass form data to the parent 
+      confirm()
+      toast(<NotifAddUser/>)
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -564,8 +572,30 @@ const AddUserModal = ({ isOpen, onClose, onAddUser,confirm }) => {
   );
 };
 // eslint-disable-next-line react/prop-types
-const SpecialistSelectionModal = ({ isOpen, onClose, onConfirm,selectedSpecialist,setIdSelected, specialists = [] }) => {
+const SpecialistSelectionModal = ({ isOpen, onClose ,SendDirect ,handleReloadMessage,selectedSpecialist,setIdSelected,roomName, specialists = [] }) => {
   if (!isOpen) return null;
+  const [me,setMe]=useState({})
+useEffect(()=>{
+  const fetch=async()=>{
+   const res=await fetchWhoAmI();
+   setMe(res)
+  }
+  fetch()
+  
+},[])
+  const sendDirect=async()=>{
+   const body={
+    room_name:roomName,
+    user_to_change :me.data.phoneNumber,
+    new_user : selectedSpecialist
+   }
+  await SendDirect(body);
+   handleReloadMessage()
+   onClose();
+   const sendInf=specialistsSend.find(i=>i.phoneNumber==selectedSpecialist)
+   toast(<NotifDirectAdmin fullName={sendInf.fullName}/>)
+  }
+  const specialistsSend=specialists&&me.data&&specialists.filter(i=>i.email!=me.data?.email)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
       <div className="gradient-bg relative rounded-lg shadow-lg w-96 p-6">
@@ -575,20 +605,20 @@ const SpecialistSelectionModal = ({ isOpen, onClose, onConfirm,selectedSpecialis
         >
       <OncloseIcon/>
         </button>
-        <h2 className="text-center text-lg py-3 font-bold mb-4">ارسال پیام به متخصص: تست</h2>
+        <h2 className="text-center text-lg py-3 font-bold mb-4">ارسال پیام به متخصص: </h2>
         {
-          specialists.length<1?
+          specialists.length==0?
           <div className='flex items-center h-[70%] justify-center'>
           <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-t-[#00572C]" />
           </div>
           :
           <ul className="space-y-2">
-          {specialists.map((specialist) => (
+          {specialists&&specialistsSend&&specialistsSend.map((specialist) => (
             <li
               key={specialist.user}
-              onClick={()=>setIdSelected(specialist.user)}
+              onClick={()=>setIdSelected(specialist.phoneNumber)}
               className={`flex items-center justify-start p-2 rounded-[50px] cursor-pointer  ${
-                selectedSpecialist === specialist.user ? 'bg-[#D2EFE3]' : ''
+                selectedSpecialist === specialist.phoneNumber ? 'bg-[#D2EFE3]' : ''
               }  hover:bg-[#D2EFE3] transition`}
             >
               <span>
@@ -608,7 +638,7 @@ const SpecialistSelectionModal = ({ isOpen, onClose, onConfirm,selectedSpecialis
        
         <div className="mt-6 flex justify-center">
           <button
-            onClick={onConfirm}
+            onClick={sendDirect}
             className="bg-[#024227] w-full text-white px-6 py-2 rounded hover:bg-green-900 transition"
           >
             تایید
@@ -619,7 +649,7 @@ const SpecialistSelectionModal = ({ isOpen, onClose, onConfirm,selectedSpecialis
   );
 };
 
-const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm })=>{
+const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm,id })=>{
   if (!isOpen) return null;
   const [formData, setFormData] = useState({
     fullName: data.fullName||"",
@@ -628,7 +658,7 @@ const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm })=>{
     email: data.email||"",
     specialties:2
   });
-  const [file, setFile] = useState(null);
+  const [File, setFile] = useState(null);
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -643,12 +673,14 @@ const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm })=>{
     for (const key in formData) {
       form_Data.append(key, formData[key]);
     }
-    if (file) {
-      form_Data.append("file", file);
+    if (File) {
+      form_Data.append("profile_image", File);
     }
-    await onEditAdmin(form_Data)    
+    console.log(File)
+    await onEditAdmin(id,form_Data)    
       onClose();  
       confirm();
+      toast(<NotifUpdateAdmin/>)
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -722,7 +754,7 @@ const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm })=>{
                   onChange={handleChange}
                   value={formData.phoneNumber}
                     type="number"
-                    name='phoneNumber'
+                    // name='phoneNumber'
                     placeholder="شماره موبایل"
                     className="w-[245px] py-3 pr-10 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#fff]"
                   />
@@ -763,7 +795,7 @@ const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm })=>{
     </div>
     </div>
     <div className="relative w-full text-[#024227]  my-3 mx-2">
-      {file&&'تصویر پروفایل تغییر کرد'}
+      {File&&'تصویر پروفایل آپلود شد'}
     </div>
   </div>
 
@@ -782,7 +814,7 @@ const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm })=>{
     </div>
   );
 }
-const EditUSerModal=({data, isOpen, onClose, onEditUser,confirm })=>{
+const EditUSerModal=({data, isOpen, onClose, onEditUser,confirm ,id})=>{
   if (!isOpen) return null;
   const [formData, setFormData] = useState({
     fullName: data.fullName||"",
@@ -790,7 +822,7 @@ const EditUSerModal=({data, isOpen, onClose, onEditUser,confirm })=>{
     mobile: data.phoneNumber||"",
     email: data.email||"",
   });
-  const [file, setFile] = useState(null);
+  const [File, setFile] = useState(null);
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -805,12 +837,13 @@ const EditUSerModal=({data, isOpen, onClose, onEditUser,confirm })=>{
     for (const key in formData) {
       form_Data.append(key, formData[key]);
     }
-    if (file) {
-      form_Data.append("file", file);
+    if (File) {
+      form_Data.append("profile_image", File);
     }
-   await onEditUser(form_Data)    
+   await onEditUser(id,form_Data)    
       confirm()
       onClose();  
+      toast(<NotifUpdateUser/>)
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -872,7 +905,7 @@ const EditUSerModal=({data, isOpen, onClose, onEditUser,confirm })=>{
                   <input
                   onChange={handleChange}
                   value={formData.mobile}
-                  name="mobile"
+                  // name="mobile"
                     type="number"
                     placeholder="شماره موبایل"
                     className="w-[245px] py-3 pr-10 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#fff]"
@@ -914,7 +947,7 @@ const EditUSerModal=({data, isOpen, onClose, onEditUser,confirm })=>{
     </div>
     </div>
     <div className="relative w-full text-[#024227]  my-3 mx-2">
-      {file&&'تصویر پروفایل تغییر کرد'}
+      {File&&'تصویر پروفایل آپلود شد'}
     </div>
   </div>
 

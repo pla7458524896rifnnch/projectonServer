@@ -77,10 +77,10 @@ const AdminPageStore = create((set) => ({
       set({ loading: false, error: error.message });
     }
   },
-  EditAdmin:async(body)=>{
+  EditAdmin:async(id,body)=>{
     set({ loading: true, error: null });
     try {
-      const response = await EditAdmin(body);
+      const response = await EditAdmin(id,body);
       if (response.error) {
         set({ loading: false, error: response.error });
       } else {

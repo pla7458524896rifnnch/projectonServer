@@ -25,7 +25,7 @@ function LoginPage() {
     <div className="font-custom">  
       <div className="flex flex-col lg:flex-row min-h-screen">  
         {/* Left Section */}  
-        <div className="flex-1 bg-[#00572C] flex items-center justify-center w-full lg:w-[570px] h-[300px] lg:h-[674px] rounded-br-[50px] relative overflow-hidden">  
+        <div className="flex-1 bg-[#00572C] flex items-center justify-center w-full lg:w-[540px] h-[300px] lg:h-[600px] rounded-br-[50px] relative overflow-hidden">  
           {/* Background Waves */}  
           <div className="absolute w-full h-full">  
             <div className="absolute scale-2 top-5">  
@@ -139,8 +139,8 @@ function LoginPage() {
 )}
         </div>  
       </div>  
-      <footer className="text-center py-5 text-sm text-gray-500">  
-        تهیه شده توسط کلینیک تخصصی و مرکز مشاوره کشاورزی دانشگاه جهرم  
+      <footer className="text-center fixed left-[35%] bottom-0 mx-auto py-5 text-sm text-gray-500">  
+      تمامی حقوق مادی و معنوی این نرم افزار متعلق به دانشگاه جهرم می باشد 
       </footer>  
     </div>  
   );  

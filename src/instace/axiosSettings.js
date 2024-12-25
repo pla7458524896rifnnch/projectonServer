@@ -3,7 +3,6 @@ import useGetCookie from "../Hooks/Cookie";
   
  export const apiClient = axios.create({  
   baseURL: 'http://151.232.36.49:8000',
-  // baseURL: 'http://127.0.0.1:8000',
   headers: {  
     "Content-Type": "application/json",  
   },  
@@ -15,6 +14,12 @@ apiClient.interceptors.request.use(
       if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
       }
+      if ((config.method === 'put' || config.method === 'post') && config.data instanceof FormData) {  
+        config.headers['Content-Type'] = 'multipart/form-data';  
+      } else if (config.method === 'put' || config.method === 'post') {  
+        // برای متدهای PUT و POST که داده‌ها JSON هستند  
+        config.headers['Content-Type'] = 'application/json';  
+      }  
       return config;
   },
   (error) => {

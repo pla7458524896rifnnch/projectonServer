@@ -10,6 +10,7 @@ import MessagesPage from "./Pages/messagesPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useEffect } from "react";
 import useGetCookie from "./Hooks/Cookie";
+import { ToastContainer } from "react-toastify";
 
 function AppContent() {  
   const {getCookie}=useGetCookie();
@@ -49,6 +50,21 @@ function AppContent() {
         } />  
           <Route path="*" element={<Navigate to='/login' />} />  
         </Routes>  
+
+        <ToastContainer
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        toastClassName={() =>
+          "bg-transparent shadow-none relative left-[130px] p-0 m-0"
+        }
+        bodyClassName={() => "p-0 m-0"}
+        className="bg-transparent"
+      />
       </div>  
     </div>  
   );  

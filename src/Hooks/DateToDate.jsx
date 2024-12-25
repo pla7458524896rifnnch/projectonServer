@@ -7,18 +7,16 @@ export function useDateToDate() {
         
         return (  
            <>
-{year=='Invalid date'||time=='Invalid date'?(<span></span>):(<span>  
+{year=='Invalid date'||time=='Invalid date'?(<span >وارد نشده </span>):(<span>  
     {year} - {time}  
 </span>  )}
            </>
         );  
     }  
-
     return {  
         DateToFa  
     }  
 }  
-
 export const useDateToTime=(iso)=>{
     const time = moment(iso).locale('fa').format('HH:mm');      // ساعت  
     return time

@@ -37,7 +37,8 @@ const putData = async (url, body='') => {
 // Fetch Functions  
 export const fetchWhoAmI=()=>fetchData('/api/v1/accounts/me_admin/')
 export const fetchAllUsers = () => fetchData("/api/v1/accounts/all_users/");  
-export const fetchAllAdmins = () => fetchData("/api/v1/accounts/all_specialist/");  
+export const fetchAllAdmins = () => fetchData("/api/v1/accounts/all_specialist_admin/");  
+export const fetchAllAdminsByDirect = () => fetchData("/api/v1/accounts/all_specialist/");  
 export const fetchAllMessages = () => fetchData("/accounts/all_Massages/");  
 export const fetchProcessSystem = () => fetchData("/ProcessSystem/");  
 export const fetchBarChart = () => fetchData("/BarChart/");  
@@ -50,11 +51,11 @@ export const deleteUser = (id) => deleteData(` /api/v1/accounts/delete_user/${id
 export const deleteAdmins = (body) => deleteData("/accounts/delete_admins/", body);  
 export const deleteMessages = (body) => deleteData("/accounts/delete_messages/", body);   
 // Add Functions  
-export const AddUser = (body) => postData("/api/v1/accounts/register_user", body);  
+export const AddUser = (body) => postData("/api/v1/accounts/register_user/", body);  
 export const AddAdmin = (body) => postData("/api/v1/accounts/add_specialist/", body);  
 //Update && Edit
-export const EditUser = (body) => putData(" /api/v1/accounts/me_update/", body);  
-export const EditAdmin = (body) => putData("/api/v1/accounts/me_update_admin/", body);  
+export const EditUser = (id,body) => putData(`/api/v1/accounts/update_admin_user/${id}/`, body);  
+export const EditAdmin = (id,body) => putData(`/api/v1/accounts/update_admin/${id}/`, body);  
 //auth
 export const loginUser = (body)=>{
  try {
@@ -77,3 +78,4 @@ export const logoutUser=async()=>{
 //get and create function socket 
 export const createRoom=(body)=>postData('/chat/createroom/',body) 
 export const getChats=(user)=>fetchData(`/chat/getchats/${user}`)
+export const SendDirectAdmin=(body)=>postData('/chat/changeadmin/',body)

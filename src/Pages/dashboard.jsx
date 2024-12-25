@@ -3,7 +3,8 @@ import DashboardPageStore from "../store/DashboardPageStore";
 import ChartCard from "../components/chartCard";  
 import { ActiveUsersIcon, ProcessedMessagesIcon, RevenueIcon } from "../components/icons";
 import { fetchWhoAmI } from "../api/api";
-
+import { ToastContainer,toast } from "react-toastify";
+import { NotifMessage } from "../components/notify";
 function Dashboard() {  
   const {  
     loading,  
@@ -16,7 +17,8 @@ function Dashboard() {
     fetchCircleChart,  
   } = DashboardPageStore();  
 
- 
+ useEffect(()=>{
+ },[])
   return (  
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-custom overflow-x-auto">  
       {/* Top Stats */}  
@@ -45,8 +47,7 @@ function Dashboard() {
       </div>  
     </div>  
   );  
-}  
-
+} 
 // Stat Card Component
 const StatCard = ({ title, value, icon: Icon }) => (  
   <div className="p-4 rounded-lg shadow bg-white transition-transform transform hover:scale-105 text-center md:text-left">  

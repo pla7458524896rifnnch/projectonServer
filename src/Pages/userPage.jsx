@@ -16,6 +16,8 @@ import {
   Trash2Icon,
   TrashIcon,
 } from "../components/icons";
+import { toast } from "react-toastify";
+import { NotifDeleteUser } from "../components/notify";
 
 function UserPage() {
   const {
@@ -37,7 +39,7 @@ function UserPage() {
       fetchAllUsers();
       setTimeout(() => {
         setHasFetchedUsers(true)
-      }, 2000);
+      }, 1000);
     }
   }, [hasFetchedUsers]);
  
@@ -89,7 +91,7 @@ function UserPage() {
     handleReloadUsers()
     setCurrentPage(1)
     setModalOpenUser(false)
-    
+    toast(<NotifDeleteUser/>)
   };
   const handleConfirmDeleteUsers=async()=>{
     await deleteUsers(selectedItems)
@@ -104,13 +106,22 @@ function UserPage() {
     setModalAddOpen(false);
     setHasFetchedUsers(false)
   };
-  if ( error&&!users) {
-    return(
-      <div> مشکلی پیش امده....! اینترنت خود را چک کنید</div>
-    )
-  }
+  if (loading) {
+    return (<><div className="p-6 bg-gray-50 min-h-screen flex justify-center items-center font-custom" dir="rtl">
+    <div className="flex items-center relative h-[100%] justify-center">
+           <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-t-[#00572C]" />
+     </div>
+     </div>
+     </>)
+   }
+   if (error) {
+    return <div className="p-6 bg-gray-50 min-h-screen flex justify-center items-center font-custom" dir="rtl">
+     <div>
+     مشکلی در سمت سرور پیش امده
+     </div>
+    </div>
+   }
 
-   
   return (
     <div className="p-6 bg-gray-50 min-h-screen font-custom" dir="rtl">
       {/* Header */}
@@ -147,11 +158,7 @@ function UserPage() {
         </p>
       </div>
 
-      {!hasFetchedUsers ? (
-        <div className="flex items-center relative top-[150px] h-[100%] justify-center">
-          <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-t-[#00572C]" />
-        </div>
-      ) : (
+      
         <>
           {/* Table for larger screens */}
           <div className="hidden lg:block">
@@ -235,7 +242,7 @@ function UserPage() {
                   <h6>0</h6> <h6 className="text-[#ADADAD] pr-2 text-[15px] ">ریال</h6>
                 </td>
                 <td className="p-3 text-right">
-                  <button className="px-2" onMouseDown={() => setidSelectedEdit(row.user)} onClick={() => { fetchUser(idSelectedEdit); setModalEditOpen(true); }}><EditIcon /></button>
+                  <button className="px-2" onMouseDown={() => setidSelectedEdit(row.user)} onClick={() => { setModalEditOpen(true); }}><EditIcon /></button>
                   <button onMouseDown={()=>setIdDeleteUser(row.user)} onClick={() => setModalOpenUser(true)} className="text-red-500 mx-2">
                     <Trash2Icon />
                   </button>
@@ -295,11 +302,9 @@ function UserPage() {
         <div>صفحه {currentPage} از {totalPages}</div>
         <button onClick={handleNext} disabled={currentPage === totalPages} className={`px-4 py-2 mx-3 bg-gray-100 rounded-md ${currentPage === totalPages && 'disabled:opacity-40'}`}>بعدی</button>
       </div>
-)  } 
+)} 
           </div>
         </>
-      )}
-
       <ConfirmationModalDeleteUser
         isOpen={isModalOpenUser}
         onClose={() => setModalOpenUser(false)}
@@ -319,6 +324,7 @@ function UserPage() {
       <EditUSerModal
         data={users && users.find((i) => i.user === idSelectedEdit)}
         isOpen={isModalEditOpen}
+        id={idSelectedEdit}
         onClose={() => setModalEditOpen(false)}
         onEditUser={EditUser}
         confirm={handleReloadUsers}

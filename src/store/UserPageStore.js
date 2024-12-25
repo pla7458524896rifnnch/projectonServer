@@ -72,10 +72,10 @@ const UserPageStore = create((set) => ({
       set({ loading: false, error: error.message });
     }
   },
-  EditUser:async(body)=>{
+  EditUser:async(id,body)=>{
       set({ loading: true, error: null });
       try {
-        const response = await EditUser(body);
+        const response = await EditUser(id,body);
         if (response.error) {
           set({ loading: false, error: response.error });
         } else {

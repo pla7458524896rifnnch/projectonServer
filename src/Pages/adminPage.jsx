@@ -4,6 +4,8 @@ import AdminPageStore from "../store/AdminPageStore";
 import { ArrowDownIcon, CheckboxIcon,   DownFlashIcon, EditIcon, PlusIcon, ProfileIcon, Trash2Icon, TrashIcon } from "../components/icons";
 import {useDateToDate} from "../Hooks/DateToDate";
 import useGetAuth from "../Hooks/Auth";
+import { toast, ToastContainer } from "react-toastify";
+import { NotifDeleteAdmin } from "../components/notify";
 const dataDemo = [
   {
     id: 1,
@@ -137,8 +139,8 @@ function AdminPage() {
   const rowsPerPage = 5;
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentData =admins&&me&&(me[0].is_admin==false?admins:me).slice(indexOfFirstRow, indexOfLastRow)
-  const totalPages = admins&&me&&Math.ceil((me[0].is_admin==false?admins:me).length / rowsPerPage);
+  const currentData =admins&&me&&(me[0].is_admin==true?admins:me).slice(indexOfFirstRow, indexOfLastRow)
+  const totalPages = admins&&me&&Math.ceil((me[0].is_admin==true?admins:me).length / rowsPerPage);
   //functions
   const handleNext = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -148,8 +150,9 @@ function AdminPage() {
   };
   const handleConfirmDelete = async() => {
     await deleteAdmin(IdDeleteUser)
-    handleReloadAmins()
     setModalOpenAdmin(false)
+    handleReloadAmins()
+    toast(<NotifDeleteAdmin/>)
   };
   const handleConfirmDeleteAdmins=async()=>{
     await deleteAdmin(selectedItems)
@@ -179,19 +182,29 @@ const confirmAddAdmin=()=>{
   setHasFetchedAdmins(false)
 }
   useEffect(()=>{
-if(!hasFetchedAdmins){
+    if (!hasFetchedAdmins) {
   fetchAllAdmins();
   setTimeout(() => {
     setHasFetchedAdmins(true)
-  }, 2000);
-}
-  },[hasFetchedAdmins])
+  }, 1000);
+    }
+},[hasFetchedAdmins])
 
-  if ( error&&!admins) {
-    return(
-      <div> مشکلی پیش امده....! اینترنت خود را چک کنید</div>
-    )
-  }
+  if (loading) {
+    return (<><div className="p-6 bg-gray-50 min-h-screen flex justify-center items-center font-custom" dir="rtl">
+    <div className="flex items-center relative h-[100%] justify-center">
+           <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-t-[#00572C]" />
+     </div>
+     </div>
+     </>)
+   }
+   if (error) {
+    return <div className="p-6 bg-gray-50 min-h-screen flex justify-center items-center font-custom" dir="rtl">
+     <div>
+     مشکلی در سمت سرور پیش امده
+     </div>
+    </div>
+   }
 
    
   return (
@@ -204,7 +217,7 @@ if(!hasFetchedAdmins){
         <DownFlashIcon/>
 </button>
         </div>
- {me.length>0&&me[0].is_admin==false&&(  <div className="flex  items-center">
+ {me.length>0&&me[0].is_admin==true&&me[0].is_modir==true&&(  <div className="flex  items-center">
       <button onClick={()=>setModalAddOpen(true)} className="flex items-center pl-7 bg-[#024227] text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-900">
         <span className="text-xl font-bold ml-2">
           <PlusIcon/>
@@ -212,18 +225,14 @@ if(!hasFetchedAdmins){
       </button>
       </div>)}
       
-    {me.length>0&&me[0].is_admin==false&&( <p className="absolute flex items-center text-[#C30000] text-[14px] left-5 top-5"><span>{selectedItems.length>0&&(`${selectedItems.length} ردیف انتخاب شدند `)}</span>
+    {admins&&admins?.length!=1&&( <p className="absolute flex items-center text-[#C30000] text-[14px] left-5 top-5"><span>{selectedItems.length>0&&(`${selectedItems.length} ردیف انتخاب شدند `)}</span>
 {selectedItems.length>0&&(<TrashIcon onClick={() => setModalOpen(true)}/>)}
  </p>)}
     </div>
 
 
     
-    {!hasFetchedAdmins ? (
-        <div className="flex items-center relative top-[150px] h-[100%] justify-center">
-          <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-t-[#00572C]" />
-        </div>
-      ) :(
+    
         <>
           {/* Table for larger screens */}
           <div className="hidden lg:block">
@@ -233,8 +242,8 @@ if(!hasFetchedAdmins){
               <th className="pt-2 text-center">
               <div className="inline-flex items-center my-5">
   <label className="flex items-center cursor-pointer relative">
-    <input  checked={selectAll}
-    onChange={handleSelectAll} type="checkbox" className="peer h-6 w-6 cursor-pointer transition-all appearance-none rounded-[7px] bg-slate-100 shadow hover:shadow-md border border-slate-300 checked:bg-[#003A06] checked:border-[#003a06a9]" id="check-custom-style" />
+    <input  checked={selectAll} 
+    onChange={handleSelectAll} type="checkbox" className="peer h-6 w-6  cursor-pointer transition-all appearance-none rounded-[7px] bg-slate-100 shadow hover:shadow-md border border-slate-300 checked:bg-[#003A06] checked:border-[#003a06a9]" id="check-custom-style" />
     <span className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
     <CheckboxIcon/>
     </span>
@@ -276,7 +285,7 @@ if(!hasFetchedAdmins){
           </thead>
           <tbody>
             {admins&&(currentData).map((row, index) => (
-              <tr key={index} className="border hover:bg-gray-100">
+              <tr key={index} className={`border hover:bg-gray-100  `} >
                 <td className="p-3 text-center">
                 <div className="inline-flex items-center">
   <label className="flex items-center cursor-pointer relative">
@@ -322,7 +331,7 @@ if(!hasFetchedAdmins){
                   }} className={` mx-2`}>
                     <EditIcon/>
 </button>
-              { me[0].user!==row.user&&( <button onMouseDown={()=>setIdDeleteUser(row.user)} onClick={() => setModalOpenAdmin(true)} className="text-red-500 mx-2">
+              { me.length>0&&me[0].email!=row.email&&( <button onMouseDown={()=>setIdDeleteUser(row.user)} onClick={() => setModalOpenAdmin(true)} className="text-red-500 mx-2">
                     <Trash2Icon/>
 </button>)}
                 </td>
@@ -360,13 +369,13 @@ if(!hasFetchedAdmins){
                     >
                       <EditIcon />
                     </button>
-                    <button
+                   {me.length>0&&me[0].is_admin==true&&me[0].is_modir==true&&(<button
                     onMouseDown={()=>setIdDeleteUser(user.user)}
                       onClick={() => setModalOpenAdmin(true)}
                       className="text-red-500 px-2"
                     >
                       <TrashIcon />
-                    </button>
+                    </button>)}
                   </div>
                 </div>
                 <p className="text-sm text-gray-500">{user.email}</p>
@@ -382,7 +391,6 @@ if(!hasFetchedAdmins){
       </div>)}
           </div>
         </>
-      )}
      
 
 {/* modals */}
@@ -403,8 +411,11 @@ if(!hasFetchedAdmins){
         isOpen={isModalEditOpen}
         onClose={() => setModalEditOpen(false)}
         onEditAdmin={EditAdmin}
+        id={idSelectedEdit}
         confirm={handleReloadAmins}
         />
+        
+      
     </div>
   );
 }

@@ -91,3 +91,11 @@ body{
 ::-webkit-scrollbar-thumb:hover {
   background: #024227e1;
 }
+
+
+.tx-gr{
+  background: -webkit-linear-gradient(0deg, #37f0a3 0%, #024227 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bolder;
+}

@@ -11,6 +11,7 @@ import {
   CheckboxIcon,
   DownFlashIcon,
   EditIcon,
+  ErrorPic,
   PlusIcon,
   ProfileIcon,
   Trash2Icon,
@@ -115,11 +116,12 @@ function UserPage() {
      </>)
    }
    if (error) {
-    return <div className="p-6 bg-gray-50 min-h-screen flex justify-center items-center font-custom" dir="rtl">
-     <div>
-     مشکلی در سمت سرور پیش امده
-     </div>
-    </div>
+    return <div className="p-6 bg-gray-50 min-h-screen flex flex-col gap-2 justify-center items-center font-custom" dir="rtl">
+        <ErrorPic/>
+        <h1 className="tx-gr mt-6 text-lg">
+        مشکلی در سمت سرور پیش امده !
+        </h1>
+       </div>
    }
 
   return (

@@ -1,7 +1,7 @@
 import  { useEffect, useState } from "react";
 import { AddManagerModal, ConfirmationModalDeleteAdmin, ConfirmationModalDeleteAdmins, EditManagerModal  } from "../components/modals";
 import AdminPageStore from "../store/AdminPageStore";
-import { ArrowDownIcon, CheckboxIcon,   DownFlashIcon, EditIcon, PlusIcon, ProfileIcon, Trash2Icon, TrashIcon } from "../components/icons";
+import { ArrowDownIcon, CheckboxIcon,   DownFlashIcon, EditIcon, ErrorPic, PlusIcon, ProfileIcon, Trash2Icon, TrashIcon } from "../components/icons";
 import {useDateToDate} from "../Hooks/DateToDate";
 import useGetAuth from "../Hooks/Auth";
 import { toast, ToastContainer } from "react-toastify";
@@ -199,11 +199,12 @@ const confirmAddAdmin=()=>{
      </>)
    }
    if (error) {
-    return <div className="p-6 bg-gray-50 min-h-screen flex justify-center items-center font-custom" dir="rtl">
-     <div>
-     مشکلی در سمت سرور پیش امده
-     </div>
-    </div>
+    return <div className="p-6 bg-gray-50 min-h-screen flex flex-col gap-2 justify-center items-center font-custom" dir="rtl">
+        <ErrorPic/>
+        <h1 className="tx-gr mt-6 text-lg">
+        مشکلی در سمت سرور پیش امده !
+        </h1>
+       </div>
    }
 
    

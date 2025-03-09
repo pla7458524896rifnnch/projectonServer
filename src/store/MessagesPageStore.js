@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { deleteMessages, fetchAllAdmins, fetchAllAdminsByDirect, fetchAllMessages, fetchAllUsers, fetchWhoAmI, getChats, SendDirectAdmin } from "../api/api";
+import { deleteMessages, fetchAllAdmins, fetchAllAdminsByDirect, fetchAllMessages, fetchAllUsers, fetchWhoAmI, getChats, SendDirectAdmin} from "../api/api";
 
 const MessagesPageStore = create((set) => ({
   messages: null,  
@@ -78,6 +78,7 @@ fetchAllUsers: async () => {
       set({ loading: false, error: error.message });
     }
   },
+   
 }));
 
 export default MessagesPageStore;

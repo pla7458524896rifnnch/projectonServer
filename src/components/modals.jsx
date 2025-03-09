@@ -674,7 +674,7 @@ const EditManagerModal=({data, isOpen, onClose, onEditAdmin,confirm,id })=>{
       form_Data.append(key, formData[key]);
     }
     if (File) {
-      form_Data.append("profile_image", File);
+      form_Data.append("profile_img", File);
     }
     console.log(File)
     await onEditAdmin(id,form_Data)    
@@ -838,7 +838,7 @@ const EditUSerModal=({data, isOpen, onClose, onEditUser,confirm ,id})=>{
       form_Data.append(key, formData[key]);
     }
     if (File) {
-      form_Data.append("profile_image", File);
+      form_Data.append("profile_img", File);
     }
    await onEditUser(id,form_Data)    
       confirm()

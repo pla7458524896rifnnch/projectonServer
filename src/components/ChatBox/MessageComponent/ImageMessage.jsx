@@ -1,10 +1,11 @@
-import { FileChatBoxIcon, TickMessageIcon } from "../../icons";
+import { FileChatBoxIcon, TickMessageIcon, TickMessageIconFalse } from "../../icons";
 
-export const ImageMessage = ({ fileName, fileSize, fileType, time, isSent }) => {
+export const ImageMessage = ({ fileName, fileSize, fileType,url, time, seen,username ,currentUsername}) => {
+  const isOwnMessage = username === currentUsername;
     return (
       <div
         className={`flex flex-col ${
-          isSent
+          isOwnMessage
             ? "items-start    " // پیام ارسال‌شده
             : "items-end    " // پیام دریافتی
         }   rounded-xl max-w-xs  `}
@@ -23,24 +24,24 @@ export const ImageMessage = ({ fileName, fileSize, fileType, time, isSent }) => 
           <div className="w-12 h-8   flex items-center justify-center rounded-full">
             <FileChatBoxIcon /> {/* آیکون فایل */}
           </div>
-          <p className="font-semibold  text-[12px] truncate">{fileName}</p>
+          <p className="font-semibold  text-[12px] truncate"><a target="_blank"  href={url} >{fileName}</a></p>
         </div>
-  
         {/* اطلاعات فایل */}
-       
         </div>
         {/* آیکون و نام فایل */}
-       
-        <p className={`text-[10px]   text-gray-600 mt-1 absolute ${isSent?'left-0':'right-0'} bottom-0`}>
+        <p className={`text-[10px]   text-gray-600 mt-1 absolute ${isOwnMessage?'left-0':'right-0'} bottom-1`}>
           {fileSize} • {fileType}
         </p>
         {/* زمان و وضعیت ارسال */}
-        <div className={`flex   items-center gap-1 justify-start text-[10px] text-gray-500 mt-2 ${
-                 isSent ? "text-center" : "text-right"
-                }`}>
+        <div className={`flex   items-center gap-1 justify-start  text-[10px] text-gray-500 mt-2   
+             
+                
+                `}>
+                   {username&&(seen ? <TickMessageIcon />:<TickMessageIconFalse/>)} {/* نمایش آیکون تیک */}
           <span >{time}</span>
-          {isSent && <TickMessageIcon />} {/* آیکون تیک */}
         </div>
+       
+       
       </div>
     );
   };

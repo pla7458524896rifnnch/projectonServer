@@ -19,7 +19,7 @@ const deleteData = async (url, body) => {
 const postData = async (url, body='') => {  
   try {  
     const response = await apiClient.post(url, body);  
-    return response.data;  
+    return response;  
   } catch (error) {  
     console.error(`Error in adding data at ${url}:`, error);  
     return { error: error.message || "خطای ناشناخته" };  
@@ -75,7 +75,19 @@ export const logoutUser=async()=>{
     return { error: error.message || "خطای ناشناخته" };  
   }  
 }
-//get and create function socket 
+//functions socket 
 export const createRoom=(body)=>postData('/chat/createroom/',body) 
+export const uploadFile = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file); // file یک File Object است
+
+  try {
+    const response = await postData("/chat/upload/", formData);
+    return response; // فرض: سرور آدرس فایل را برمی‌گرداند
+  } catch (error) {
+    console.error("File upload error:", error);
+    throw error;
+  }
+};
 export const getChats=(user)=>fetchData(`/chat/getchats/${user}`)
 export const SendDirectAdmin=(body)=>postData('/chat/changeadmin/',body)

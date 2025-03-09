@@ -1,11 +1,11 @@
 import   { useEffect, useState } from "react";
 import { ConfirmationModalDeleteMessages, SpecialistSelectionModal } from "../components/modals";
 import useGetMassagesPageStore from "../Hooks/MessagesPage";
-import { ArrowDownIcon, CheckboxIcon, ProfileIcon, Trash2Icon, TrashIcon } from "../components/icons";
+import { ArrowDownIcon, CheckboxIcon, ErrorPic, ProfileIcon, Trash2Icon, TrashIcon } from "../components/icons";
 import MessagePageModal from "../components/ChatBox/MessagePageModal";
 import { fetchWhoAmI } from "../api/api";
 function MessagesPage() {
-  const { messages,loading,data,error,fetchAllMessages,SendDirect,fetchAllAdmins,fetchAllUsers,users,deleteMessagesById}=useGetMassagesPageStore();
+  const { messages,loading,data,error,fetchAllMessages,SendDirect,uploadfile,fetchAllAdmins,fetchAllUsers,users,deleteMessagesById}=useGetMassagesPageStore();
   const [user,setUser]=useState({})
   const [profile,setProfile]=useState({})
 
@@ -112,18 +112,22 @@ function MessagesPage() {
     </>)
   }
   if (error) {
-   return <div className="p-6 bg-gray-50 min-h-screen flex justify-center items-center font-custom" dir="rtl">
-    <div>
-    مشکلی در سمت سرور پیش امده
-    </div>
+   return <div className="p-6 bg-gray-50 min-h-screen flex flex-col gap-2 justify-center items-center font-custom" dir="rtl">
+    <ErrorPic/>
+    <h1 className="tx-gr mt-6 text-lg">
+    مشکلی در سمت سرور پیش امده !
+    </h1>
    </div>
   }
   return (
     <div className="p-6 bg-gray-50 min-h-screen font-custom" dir="rtl">
       {/* Header */}
      {messages&&messages.length==0?
-     (<div className="text-center">
-      <h1>پیامی وجود ندارد</h1>
+     (<div className=" flex flex-col min-h-screen gap-2 justify-center items-center">
+       <ErrorPic/>
+    <h1 className="tx-gr mt-6 text-lg">
+    پیامی برای شما ارسال نشده!
+    </h1>
       </div>)
      :
      ( <><div className="flex flex-col sm:flex-row justify-between mb-7 relative">
@@ -207,8 +211,8 @@ function MessagesPage() {
                     </td>
                     <td className="p-3 text-right">
                       <div className="flex gap-3 items-center">
-                        {row.image ? (
-                          <img src={row.image} alt="Profile" className="w-12 h-12 rounded-full" />
+                        {row.profile_img ? (
+                          <img src={row.profile_img} alt="Profile" className="w-12 h-12 rounded-full" />
                         ) : (
 
                           <ProfileIcon />
@@ -298,6 +302,7 @@ function MessagesPage() {
         profile={profile}
         roomName={roomName}
         username={user&&user.phoneNumber}
+        uploadfile={uploadfile}
       />
       <ConfirmationModalDeleteMessages
         isOpen={isModalOpen}

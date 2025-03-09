@@ -6,9 +6,11 @@ import VoiceMessage from "./MessageComponent/VoiceMessage";
 import SocketManager from "../../api/socket";
 import { useDateToTime } from "../../Hooks/DateToDate";
 import ScrollableFeed from 'react-scrollable-feed'
-import { fetchWhoAmI } from "../../api/api";
+import { fetchWhoAmI, uploadFile } from "../../api/api";
+import { File } from "p5";
+import Root_ from "postcss/lib/root";
 // import { sendPushNotification } from "../../api/sendNotificationUser";
-const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
+const MessagePageModal = ({ isOpen, onClose, profile,roomName,username,uploadfile }) => {
   if (!isOpen) return null;
   const [newMessage, setNewMessage] = useState("");
   const [allMessages, setAllMessages] = useState([]);
@@ -24,54 +26,73 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
   const [me,setMe]=useState({})
   const toggleDrawer = () => setIsOpenMoney(!isOpenMoney);
   useEffect(() => {
-    if (isOpen) {
-      socketRef.current = new SocketManager('ws://151.232.36.49:8000', roomName, username);
-      socketRef.current.connect();
+    if (!isOpen) return;
   
-      socketRef.current.onMessage((msg) => {
-        setAllMessages((prevMessages) => [...prevMessages, msg]);
-      });
-      socketRef.current.socket.onclose = () => {
-        console.log("WebSocket connection closed.");
-      };
-      socketRef.current.socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-      };
-      ///
-      const fetchMe=async()=>{
-        const res=await fetchWhoAmI()
-        setMe(res)
+    const socketManager = new SocketManager('ws://151.232.36.49:8000', roomName, username);
+    socketRef.current = socketManager;
+    socketManager.connect();
+  
+    const handleMessage = (msg) => {
+      if (msg.action === 'seen') {
+        setAllMessages(prev => 
+          prev.map(m => 
+            m.message_id === msg.message_id ? { ...m, seen: true } : m
+          )
+        );
+      } else {
+        if (msg.username !== username) {
+          socketManager.sendMessage({
+            action: 'seen',
+            message_id: msg.message_id
+          });
+        }
+        setAllMessages(prev => [...prev, msg]);
       }
-      fetchMe()
-      return () => {
-        socketRef.current.disconnect();
-        socketRef.current = null; // پاکسازی
-      };
-    }
-  }, [isOpen]);
-  const handleSendMessage = (type, content) => {
-    if (content.trim() || type !== "text") {
-      const newmsg={
-          message: content.trim(),
-          username: username,
-          type: "msg"
-      }
-      socketRef.current.sendMessage(newmsg);
-      // sendPushNotification(me.data.fullName,content)
-      setNewMessage("");
-    }
-  };
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        handleSendMessage("image", reader.result); // ارسال تصویر به سرور
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
+    };
+  
+    socketManager.onMessage(handleMessage);
+  
+    return () => {
+      socketManager.disconnect();
+      socketRef.current = null;
+    };
+  }, [isOpen, roomName, username]);
+const handleSendMessage = (type, content) => {
+  if (type === "file") {
+    const fileMessage = {
+      message: content.trim(), 
+      username: username,
+      msg_type: "file",
+    };
+    socketRef.current.sendMessage(fileMessage);
+    setNewMessage("");
+  } else if (content.trim() || type !== "text") {
+    // ارسال پیام متنی
+    const textMessage = {
+      message: content.trim(),
+      username: username,
+      msg_type: type
+    };
+    socketRef.current.sendMessage(textMessage);
+    setNewMessage("");
+  }
+};
+  // Update handleFileUpload
+// MessagePageModal.jsx
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    // ۱. فایل را آپلود کنید و منتظر دریافت URL باشید
+    const URL = await uploadFile(file); // باید آدرس فایل را از سرور بگیرد
+    // ۲. پیام فایل را با URL ارسال کنید
+    console.log(URL.data.file_url)
+      handleSendMessage("file", URL.data.file_url);
+    
+  } catch (error) {
+    console.error("خطا در آپلود فایل:", error);
+  }
+};
   const handleAudioStart = () => {
     if (isRecording) return; // جلوگیری از اجرای دوباره ضبط در حال انجام
     setIsMicPressed(true);
@@ -120,23 +141,27 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
     }
   };
   const renderMessage = (message) => {
-    switch (message.type) {
-      case "text":
+    switch (message.msg_type) {
+      case "msg":
         return (
-            <TextMessage
-            content={message.content}
-            time={message.time}
-            isSent={message.isSent}
-          />
+          <TextMessage  
+          content={message.message}  
+          time={useDateToTime(message.date_time)}  
+          username={message.username === username ? username : false}  
+          seen={message.seen}
+        />  
         )
-      case "image":
+      case "file":
         return (
             <ImageMessage
-            fileName={message.fileName || "نام فایل"}
+            url={message.message}
+            fileName={extractFileNameAndFormat(message.message).baseName}
             fileSize={message.fileSize || "2.8MB"}
-            fileType={message.fileType || "png"}
-            time={message.time}
-            isSent={message.isSent}
+            fileType={extractFileNameAndFormat(message.message).fileFormat}
+            username={message.username === username ? username : false}  
+            time={useDateToTime(message.date_time)}
+            seen={message.seen}
+            currentUsername={username}
           />
         )
       case "audio":
@@ -208,16 +233,12 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
           <div  
             className={`${  
               message.username === username   
-                ? "bg-[#C4FDE5] text-green-800"   
-                : "bg-[#F9F9F9] text-gray-800"  
+                ? message.msg_type==='file'?"bg-gray-200":"bg-[#C4FDE5] text-green-800"   
+                :  message.msg_type==='file'?"bg-gray-200":"bg-[#F9F9F9] text-gray-800"  
             } px-4 py-2 rounded-md relative max-w-fit`}  
           >  
-            <TextMessage  
-              content={message.message}  
-              time={useDateToTime(message.date_time)}  
-              username={message.username === username ? username : false}  
-            />  
-          
+          {console.log(message)}
+          {renderMessage(message)}
             {/* Message Indicator */}  
             {message.username === username ? (  
               <span className="absolute -right-[6px] -bottom-[2px]">  
@@ -230,7 +251,7 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
                 >  
                   <path  
                     d="M11.1614 13.1304C7.44173 9.12273 6.28753 5.66791 6.05038 1.11758C6.02292 0.590679 5.28874 0.422516 5.05279 0.894427L0.183314 10.6334C0.0767245 10.8466 0.134722 11.1064 0.32866 11.245C3.46666 13.4867 7.80603 13.9142 10.7934 13.9865C11.2387 13.9973 11.4644 13.4569 11.1614 13.1304Z"  
-                    fill="#C4FDE5"  
+                    fill={message.msg_type=='file'?"#e5e7eb":"#C4FDE5"}  
                   />  
                 </svg>  
               </span>  
@@ -245,7 +266,7 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
                 >  
                   <path  
                     d="M0.838647 13.1304C4.55827 9.12273 5.71247 5.66791 5.94962 1.11758C5.97708 0.590679 6.71126 0.422516 6.94721 0.894427L11.8167 10.6334C11.9233 10.8466 11.8653 11.1064 11.6713 11.245C8.53334 13.4867 4.19397 13.9142 1.20664 13.9865C0.761321 13.9973 0.535618 13.4569 0.838647 13.1304Z"  
-                    fill="#F9F9F9"  
+                    fill={message.msg_type=='file'?"#e5e7eb":"#F9F9F9"}  
                   />  
                 </svg>  
               </span>  
@@ -260,56 +281,67 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
     )}  
   </ScrollableFeed>  
 </div>
-        {/* Message Input Section */}
-        <div className="w-[616px] absolute bottom-0 mb-6 flex items-center mr-6 rounded-[20px] border border-[#35DD97] px-4 py-2">
-        {!isMicPressed&&(  <span onClick={toggleDrawer} className="ml-3 cursor-pointer">
-            <MoneyIcon />
-          </span>)}
-          {!isMicPressed&&(<span onClick={() => fileInputRef.current.click()}  htmlFor="file-upload" className="cursor-pointer">
-            <UploadFileIcon />
-          </span>)}
-          <input
-            type="file"
-            id="file-upload"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleFileUpload}
-          />
-          <input
-            type="text"
-            placeholder={isMicPressed?"":"پیام خود را وارد کنید"}
-            className="flex-1 bg-transparent outline-none pr-2 text-gray-700 placeholder-gray-400"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-          />
-          {!newMessage.length > 0 ? (
-           <span
-           className={`cursor-pointer  ${
-            isMicPressed
-              ? "bg-[#C7EBDC]   rounded-full   shadow-lg" // استایل تغییر یافته هنگام نگه داشتن
-              : "bg-transparent"
-          }`}
-           onMouseDown={handleAudioStart}
-           onMouseUp={handleAudioStop}
-         >
-           {isRecording ? <><p className="absolute  flex items-center gap-4 right-5 bottom-2">
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="4" cy="4" r="4" fill="#ED2E2E"/>
-            </svg>
-            <span>{recordingDuration}</span>
-           </p> 
-           <span className=" translate-x-2 ">
-            <MicIcon/>
-           </span>
-           </> : <MicIcon />}
-         </span>
-          ) : (
-            <button onClick={() => handleSendMessage("text", newMessage)} className="pr-3 text-sm">
-              <SendIcon />
-            </button>
-          )}
-        </div>
+       {/* Message Input Section */}
+<div className="w-[616px] absolute bottom-0 mb-6 flex items-center mr-6 rounded-[20px] border border-[#35DD97] px-4 py-2">
+  {!isMicPressed && (
+    <>
+      <span onClick={toggleDrawer} className="ml-3 cursor-pointer">
+        <MoneyIcon />
+      </span>
+      <label htmlFor="file-upload" className="cursor-pointer">
+        <UploadFileIcon />
+      </label>
+      <input
+        type="file"
+        id="file-upload"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+    </>
+  )}
 
+  <input
+    type="text"
+    placeholder={isMicPressed ? "" : "پیام خود را وارد کنید"}
+    className="flex-1 bg-transparent outline-none pr-2 text-gray-700 placeholder-gray-400"
+    value={newMessage}
+    onChange={(e) => setNewMessage(e.target.value)}
+  />
+
+  {newMessage.trim() ? (
+    <button 
+      onClick={() => handleSendMessage("msg", newMessage)}
+      className="pr-3 text-sm"
+    >
+      <SendIcon />
+    </button>
+  ) : (
+    <span
+      className={`cursor-pointer ${isMicPressed ? "bg-[#C7EBDC] rounded-full shadow-lg" : "bg-transparent"}`}
+      onMouseDown={handleAudioStart}
+      onMouseUp={handleAudioStop}
+    >
+      {isRecording ? (
+        <>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <span className="absolute flex items-center gap-1 right-8 bottom-1">
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="4" cy="4" r="4" fill="#ED2E2E"/>
+                </svg>
+                <span className="text-xs text-red-500">{recordingDuration}</span>
+              </span>
+            </div>
+            <MicIcon className="text-red-500" />
+          </div>
+        </>
+      ) : (
+        <MicIcon />
+      )}
+    </span>
+  )}
+</div>
         {/* Money Drawer */}
         <div
           className={`fixed absolute inset-x-0 w-[680px] -bottom-0 right-0 bg-[#F9F9F9] shadow-lg transition-all duration-300 transform ${
@@ -357,5 +389,14 @@ const MessagePageModal = ({ isOpen, onClose, profile,roomName,username }) => {
     </div>
   );
 };
-
+function extractFileNameAndFormat(url) {
+  const path = new URL(url).pathname;
+  const fileName = path.split('/').pop();
+  const [baseName, randomPart] = fileName.split('_');
+  const fileFormat = randomPart.split('.').pop();
+  return {
+    baseName,
+    fileFormat 
+  };
+}
 export default MessagePageModal;

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { loginUser, registerUser, logoutUser, fetchWhoAmI } from "../api/api"; 
 import useGetCookie from "../Hooks/Cookie";
+const {setCookie,removeCookie}=useGetCookie()
 const AuthStore = create((set) => ({
   user: {}, 
   loading: false,  
@@ -11,18 +12,16 @@ const AuthStore = create((set) => ({
     if (response.error) {
       set({ error: response.error, loading: false });
     } else {
+      const Data=response.data.data
       // eslint-disable-next-line react-hooks/rules-of-hooks
       if (rememberMe) {
-        const {setCookie}=useGetCookie();
-        setCookie('accessToken',response.data.access,{expires: 1})
+      await setCookie('accessToken',Data.access,{expires: 7})
         set({ user: response, loading: false });
       } else {
-        const {setCookie}=useGetCookie();
-        setCookie('accessToken',response.data.access,{expires: 7})
-        const res=await fetchWhoAmI()
+       await setCookie('accessToken',Data.access,{expires: 1})
+        await fetchWhoAmI()
         set({ user: response, loading: false });
       }
-    
     }
   },
   register: async (username, password) => {
@@ -40,7 +39,6 @@ const AuthStore = create((set) => ({
     if (response.error) {
       set({ error: response.error, loading: false });
     } else {
-      const {removeCookie}=useGetCookie();
       removeCookie('accessToken')
       set({ user: null, loading: false });
     }

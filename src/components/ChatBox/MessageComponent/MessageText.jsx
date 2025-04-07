@@ -17,7 +17,7 @@ export const TextMessage = ({ content, time, username,seen }) => {
         <p className="mb-1">{content}</p>
         <div className="flex flex-row-reverse items-center gap-1 justify-end text-[10px] text-gray-500">
           <span>{time}</span>
-          {username&&(seen ? <TickMessageIcon />:<TickMessageIconFalse/>)} {/* نمایش آیکون تیک */}
+          {username&&(seen ? <TickMessageIcon />:<TickMessageIconFalse/>)}
 
         </div>
       </div>

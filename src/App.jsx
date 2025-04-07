@@ -19,13 +19,11 @@ function AppContent() {
   const noNavbarRoutes = ["/login", "/signUp"]; 
   return (  
     <div className="app-container">  
-      {/* تنها در صورتی که کاربر در یکی از مسیرهایی باشد که نوار ناوبری نمی‌خواهد، Navbar را نمایش ندهید */}  
       {!noNavbarRoutes.includes(location.pathname) && <Navbar />}  
       <div className={`content ${noNavbarRoutes.includes(location.pathname) ? "ml-[0px]" : "ml-[256px]"}`}>  
         <NavPage />  
         <Routes>  
           <Route path="/login" element={getCookie('accessToken')?<Navigate to='/dashboard'/>:<LoginPage />} />  
-          {/* <Route path="/signUp" element={<SignUpPage />} />   */}
           <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard/>

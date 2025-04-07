@@ -152,18 +152,19 @@ const handleFileUpload = async (event) => {
         />  
         )
       case "file":
+        const url=getFileNameAndExtension(message.message)
         return (
             <ImageMessage
             url={message.message}
-            fileName={extractFileNameAndFormat(message.message).baseName}
-            fileSize={message.fileSize || "2.8MB"}
-            fileType={extractFileNameAndFormat(message.message).fileFormat}
+            fileName={url.name}
+            fileSize={message.fileSize || " "}
+               fileType={url.extension}
             username={message.username === username ? username : false}  
             time={useDateToTime(message.date_time)}
             seen={message.seen}
             currentUsername={username}
           />
-        )
+        ) 
       case "audio":
         return (
             <VoiceMessage
@@ -237,7 +238,6 @@ const handleFileUpload = async (event) => {
                 :  message.msg_type==='file'?"bg-gray-200":"bg-[#F9F9F9] text-gray-800"  
             } px-4 py-2 rounded-md relative max-w-fit`}  
           >  
-          {console.log(message)}
           {renderMessage(message)}
             {/* Message Indicator */}  
             {message.username === username ? (  
@@ -389,14 +389,13 @@ const handleFileUpload = async (event) => {
     </div>
   );
 };
-function extractFileNameAndFormat(url) {
-  const path = new URL(url).pathname;
-  const fileName = path.split('/').pop();
-  const [baseName, randomPart] = fileName.split('_');
-  const fileFormat = randomPart.split('.').pop();
-  return {
-    baseName,
-    fileFormat 
-  };
-}
+function getFileNameAndExtension(url) {  
+  const filenameWithExtension = url.substring(url.lastIndexOf('/') + 1);  
+  const [name, extension] = filenameWithExtension.split('.');  
+  return {  
+      name: decodeURIComponent(name),
+      extension: extension 
+  };  
+}  
+
 export default MessagePageModal;

@@ -1,4 +1,4 @@
-// SocketManager.js
+ 
 class SocketManager {
   constructor(url, roomName, username) {
     this.url = url;
